@@ -1,4 +1,16 @@
-# Solana Model Context Protocol (MCP) Demo
+# AMOCA (Autonomous Merit On Chain Agent)
+
+This repository demonstrates an implementation of an Autonomous Merit On Chain Agent (AMOCA) for Solana development, built on the Model Context Protocol (MCP).
+
+## What is AMOCA?
+
+AMOCA (Autonomous Merit On Chain Agent) is an intelligent agent that provides enhanced capabilities for Solana blockchain development through a standardized interface. This implementation showcases:
+
+1. Basic RPC methods for Solana (getBalance, getAccountInfo, getTransaction)
+2. Helpful autonomous workflows for Solana development
+3. Merit-based validation and verification of on-chain operations
+
+## Solana Model Context Protocol (MCP)
 
 This repository demonstrates a simple implementation of a Model Context Protocol (MCP) server for Solana development.
 
