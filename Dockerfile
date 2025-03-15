@@ -7,7 +7,7 @@ COPY package*.json ./
 COPY tsconfig.json ./
 
 # Install pnpm
-RUN npm install -g pnpm
+RUN wget -qO- https://get.pnpm.io/install.sh | sh -
 
 # Install dependencies
 RUN pnpm install
