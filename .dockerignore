@@ -18,35 +18,3 @@ dist/
 # Version control
 .git/
 .gitignore
-
-# Environment and secrets
-.env*
-*.env
-
-# Documentation
-*.md
-LICENSE
-
-# Temporary files
-tmp/
-temp/
-*.tmp
-
-# Project-specific
-bun.lock
-pnpm-lock.yaml
-smithery.yaml
-
-# Source files (retain for build)
-!src/
-!testApp/
-
-# TypeScript configuration
-tsconfig.json
-
-# Docker files
-Dockerfile*
-docker-compose*
-
-# Exclude all other files
-*
