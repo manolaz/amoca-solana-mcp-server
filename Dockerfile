@@ -1,20 +1,22 @@
-FROM node:22.12-alpine as builder
-
-# Must be entire project because `prepare` script is run during `npm install` and requires all files.
-COPY . /app
-WORKDIR /app
-
-RUN --mount=type=cache,target=/root/.npm npm install
-
-FROM node:22-alpine AS release
+FROM node:22-slim
 
 WORKDIR /app
-COPY --from=builder /app/dist /app/dist
-COPY --from=builder /app/package.json /app/package.json
-COPY --from=builder /app/package-lock.json /app/package-lock.json
 
-ENV NODE_ENV=production
+# Copy package files
+COPY package*.json ./
+COPY tsconfig.json ./
 
-RUN npm ci --ignore-scripts --omit-dev
+# Install dependencies
+RUN npm install
 
-ENTRYPOINT ["node", "dist/index.js"]
+# Copy source code
+COPY src ./src
+
+# Build TypeScript
+RUN npm run build
+
+# Set executable permissions
+RUN chmod +x build/index.js
+
+# Run the server
+CMD ["node", "build/index.js"]
