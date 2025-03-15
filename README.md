@@ -2,6 +2,8 @@
 
 This repository demonstrates an implementation of an Autonomous Merit On Chain Agent (AMOCA) for Solana development, built on the Model Context Protocol (MCP).
 
+[![smithery badge](https://smithery.ai/badge/@manolaz/amoca-solana-mcp-server)](https://smithery.ai/server/@manolaz/amoca-solana-mcp-server)
+
 ## What is AMOCA?
 
 AMOCA (Autonomous Merit On Chain Agent) is an intelligent agent that provides enhanced capabilities for Solana blockchain development through a standardized interface. This implementation showcases:
