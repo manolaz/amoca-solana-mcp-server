@@ -2,6 +2,12 @@ import { McpServer, ResourceTemplate } from "@modelcontextprotocol/sdk/server/mc
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
 import { Connection, PublicKey, LAMPORTS_PER_SOL, clusterApiUrl } from "@solana/web3.js";
+import { getExplorerLink } from "gill";
+
+const link: string = getExplorerLink({
+  cluster: "devnet",
+  account: "AXxA7eN3e6Zj2NbGaJNk7YNhZSHjaJHhtXGKPCEV8Urn",
+});
 
 // Create an MCP server
 const server = new McpServer({
