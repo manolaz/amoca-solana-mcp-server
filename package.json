@@ -4,8 +4,15 @@
   "description": "",
   "main": "src/index.ts",
   "scripts": {
-    "build": "tsc",
-    "start": "ts-node src/index.ts",
+    "prepare": "npm run build",
+		"build": "tsc",
+		"start": "node dist/index.js",
+		"dev": "tsc && node dist/index.js",
+		"check": "biome check .",
+		"format": "biome format . --write",
+		"lint": "biome lint .",
+		"typecheck": "tsc --noEmit",
+		"test": "npm run typecheck && npm run check",
     "generate-config": "echo '{\"mcpServers\":{\"solana-dev\":{\"command\":\"ts-node\",\"args\":[\"'$(pwd)'/src/index.ts\"]}}}'",
     "generate-config:js": "echo '{\"mcpServers\":{\"solana-dev\":{\"command\":\"node\",\"args\":[\"'$(pwd)'/dist/src/index.js\"]}}}'"
   },
