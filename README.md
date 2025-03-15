@@ -8,9 +8,24 @@ This repository demonstrates an implementation of an Autonomous Merit On Chain A
 
 AMOCA (Autonomous Merit On Chain Agent) is an intelligent agent that provides enhanced capabilities for Solana blockchain development through a standardized interface. This implementation showcases:
 
-1. Basic RPC methods for Solana (getBalance, getAccountInfo, getTransaction)
-2. Helpful autonomous workflows for Solana development
-3. Merit-based validation and verification of on-chain operations
+1. Comprehensive RPC methods for Solana:
+   - Basic account operations (getBalance, getAccountInfo, getTransaction)
+   - On-chain storage calculations (getMinimumBalanceForRentExemption)
+   - Wallet operations (createWallet, importWallet)
+
+2. DeFi Trading Capabilities:
+   - Token balance checking (single tokens and full portfolio analysis)
+   - Token value distribution visualization with USD-based histograms
+   - Portfolio value tracking with price data from Jupiter API
+   - Jupiter API integration for token swaps
+   - Quote retrieval and swap execution
+
+3. Helpful autonomous workflows for Solana development:
+   - Transaction analysis prompts (failure diagnosis, cost breakdown)
+   - Storage cost calculations
+   - Documentation access for Solana installation and clusters
+
+4. Merit-based validation and verification of on-chain operations
 
 ## Solana Model Context Protocol (MCP)
 

@@ -489,7 +489,7 @@ server.tool(
                 
             for (const [mint, details] of topTokens) {
                 const symbol = details.symbol || "Unknown";
-                response += `${symbol.padEnd(10)} | ${details.amount.padEnd(15)} | $${details.usdValue.toFixed(2)}\n";
+                response += `${symbol.padEnd(10)} | ${details.amount.padEnd(15)} | $${details.usdValue.toFixed(2)}\n`;
             }
             
             return {
