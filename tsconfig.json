@@ -13,6 +13,6 @@
 			"@/*": ["./src/*"]
 		}
 	},
-	"include": ["src/**/*", "app.d.ts"],
+	"include": ["src/*.ts"],
 	"exclude": ["node_modules"]
 }
