@@ -1,93 +1,19 @@
 # Smithery configuration file: https://smithery.ai/docs/config#smitheryyaml
 
 startCommand:
-  type: stdio
   configSchema:
     # JSON Schema defining the configuration options for the MCP.
     type: object
+    required:
+    - HELIUS_API_KEY
     properties:
-      rpcEndpoint:
+      HELIUS_API_KEY:
         type: string
-        description: "Solana RPC endpoint URL"
-        default: "${SOLANA_RPC_ENDPOINT}"
-      networkType:
-        type: string
-        enum: [ "mainnet-beta", "testnet", "devnet", "localnet" ]
-        description: "Solana network to use"
-        default: "${SOLANA_NETWORK_TYPE}"
-      walletKeyPath:
-        type: string
-        description: "Path to wallet keypair file"
-        default: "${WALLET_KEY_PATH}"
-      programId:
-        type: string
-        description: "Program ID for the Solana program"
-        default: "${PROGRAM_ID}"
-      feePayer:
-        type: string
-        description: "Address of the fee payer"
-        default: "${FEE_PAYER}"
-      heliusApiKey:
-        type: string
-        description: "Helius API key for enhanced Solana data services"
-        default: "${HELIUS_API_KEY}"
+        title: Helius API Key
+        description: The API key for the Helius API.
+        examples:
+        - '1234567890abcdef1234567890abcdef'
   commandFunction: |
-    async function startCommand(config) {
-      console.log(`Starting Solana MCP with configuration:`);
-      console.log(`- RPC Endpoint: ${config.rpcEndpoint}`);
-      console.log(`- Network: ${config.networkType}`);
-      console.log(`- Wallet Path: ${config.walletKeyPath}`);
-      
-      // Initialize Solana connection
-      const connection = new Connection(config.rpcEndpoint);
-      
-      // Load wallet from keypath
-      const walletKeypair = await loadWalletKey(config.walletKeyPath);
-      
-      // Helius API function
-      async function callHeliusApi(endpoint, params) {
-        if (!config.heliusApiKey) {
-          throw new Error("Helius API key is required");
-        }
-        
-        const baseUrl = "https://api.helius.xyz/v0";
-        const url = `${baseUrl}/${endpoint}?api-key=${config.heliusApiKey}`;
-        
-        try {
-          const response = await fetch(url, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(params)
-          });
-          
-          if (!response.ok) {
-            throw new Error(`Helius API error: ${response.statusText}`);
-          }
-          
-          return await response.json();
-        } catch (error) {
-          console.error("Error calling Helius API:", error);
-          throw error;
-        }
-      }
-      
-      // Test Helius API connection
-      if (config.heliusApiKey) {
-        try {
-          console.log("Testing Helius API connection...");
-          // Replace with an actual Helius API endpoint and parameters as needed
-          // const testResult = await callHeliusApi("someEndpoint", { some: "parameters" });
-          console.log("Helius API connection available");
-        } catch (error) {
-          console.warn("Helius API connection failed:", error.message);
-        }
-      } else {
-        console.warn("No Helius API key provided, skipping Helius services");
-      }
-      
-      // Your command implementation goes here
-      
-      return { success: true, message: "Solana MCP initialized successfully" };
-    }
+    |-
+    (config) => ({ command: 'node', args: ['dist/index.js'], env: { HELIUS_API_KEY: config.HELIUS_API_KEY } })
+  type: stdio
