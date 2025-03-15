@@ -1,30 +1,31 @@
 FROM node:22.12-alpine AS builder
 
-COPY . /app
-# Move tsconfig.json to the correct location
-COPY tsconfig.json /app/tsconfig.json
-
 WORKDIR /app
 
+# Copy package files first to leverage Docker cache
+COPY package*.json ./
 RUN --mount=type=cache,target=/root/.npm npm install
 
-# Add the build step to compile TypeScript to JavaScript
+# Copy source code and configuration files
+COPY tsconfig.json ./
+COPY src ./src
+
+# Build TypeScript to JavaScript
 RUN npm run build
 
-RUN --mount=type=cache,target=/root/.npm-production npm ci --ignore-scripts --omit-dev
-
-FROM node:22-alpine AS release
-
-COPY --from=builder /app/dist /app/dist
-COPY --from=builder /app/package.json /app/package.json
-COPY --from=builder /app/package-lock.json /app/package-lock.json
-
-ENV NODE_ENV=production
+# Production stage
+FROM node:22.12-alpine
 
 WORKDIR /app
 
-RUN npm ci --ignore-scripts --omit-dev
+# Copy package files
+COPY package*.json ./
+# Install only production dependencies
+RUN --mount=type=cache,target=/root/.npm npm ci --omit=dev --ignore-scripts
 
-# Fix the entrypoint to use compiled JavaScript instead of TypeScript
+# Copy built JavaScript from builder stage
+COPY --from=builder /app/dist ./dist
+
+# Run the compiled JavaScript
 ENTRYPOINT ["node", "dist/index.js"]
 
