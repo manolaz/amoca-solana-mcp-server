@@ -2,12 +2,12 @@
   "name": "solana-dev-mcp",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "src/index.ts",
   "scripts": {
     "build": "tsc",
-    "start": "ts-node index.ts",
-    "generate-config": "echo '{\"mcpServers\":{\"solana-dev\":{\"command\":\"ts-node\",\"args\":[\"'$(pwd)'/index.ts\"]}}}'",
-    "generate-config:js": "echo '{\"mcpServers\":{\"solana-dev\":{\"command\":\"node\",\"args\":[\"'$(pwd)'/dist/index.js\"]}}}'"
+    "start": "ts-node src/index.ts",
+    "generate-config": "echo '{\"mcpServers\":{\"solana-dev\":{\"command\":\"ts-node\",\"args\":[\"'$(pwd)'/src/index.ts\"]}}}'",
+    "generate-config:js": "echo '{\"mcpServers\":{\"solana-dev\":{\"command\":\"node\",\"args\":[\"'$(pwd)'/dist/src/index.js\"]}}}'"
   },
   "keywords": [],
   "author": "",
@@ -24,6 +24,8 @@
     "zod": "^3.24.2"
   },
   "devDependencies": {
-    "@types/node": "^22.13.10"
+    "@types/node": "^22.13.10",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.2"
   }
 }
