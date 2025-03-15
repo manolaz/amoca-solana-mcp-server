@@ -6,11 +6,11 @@ WORKDIR /app
 COPY package*.json ./
 COPY tsconfig.json ./
 
-
-RUN curl -fsSL https://bun.sh/install | bash
+# Install pnpm
+RUN npm install -g pnpm
 
 # Install dependencies
-RUN bun install
+RUN pnpm install
 
 # Copy source code
 COPY src ./src
