@@ -16,13 +16,13 @@ WORKDIR /app
 COPY package.json ./
 
 # Install dependencies
-RUN pnpm install
+RUN npm install
 
 # Copy the source code
 COPY . .
 
 # Build the project
-RUN pnpm run build
+RUN npm run build
 
 # Ensure the entry point is executable
 RUN chmod +x build/index.js
