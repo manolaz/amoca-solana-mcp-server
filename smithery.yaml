@@ -1,0 +1,50 @@
+# Smithery configuration file: https://smithery.ai/docs/config#smitheryyaml
+
+startCommand:
+  type: stdio
+  configSchema:
+    # JSON Schema defining the configuration options for the MCP.
+    type: object
+    required:
+    - rpcEndpoint
+    - networkType
+    - walletKeyPath
+    properties:
+      rpcEndpoint:
+        type: string
+        description: "Solana RPC endpoint URL"
+        default: "${SOLANA_RPC_ENDPOINT}"
+      networkType:
+        type: string
+        enum: [ "mainnet-beta", "testnet", "devnet", "localnet" ]
+        description: "Solana network to use"
+        default: "${SOLANA_NETWORK_TYPE}"
+      walletKeyPath:
+        type: string
+        description: "Path to wallet keypair file"
+        default: "${WALLET_KEY_PATH}"
+      programId:
+        type: string
+        description: "Program ID for the Solana program"
+        default: "${PROGRAM_ID}"
+      feePayer:
+        type: string
+        description: "Address of the fee payer"
+        default: "${FEE_PAYER}"
+  commandFunction: |
+    async function startCommand(config) {
+      console.log(`Starting Solana MCP with configuration:`);
+      console.log(`- RPC Endpoint: ${config.rpcEndpoint}`);
+      console.log(`- Network: ${config.networkType}`);
+      console.log(`- Wallet Path: ${config.walletKeyPath}`);
+      
+      // Initialize Solana connection
+      const connection = new Connection(config.rpcEndpoint);
+      
+      // Load wallet from keypath
+      const walletKeypair = await loadWalletKey(config.walletKeyPath);
+      
+      // Your command implementation goes here
+      
+      return { success: true, message: "Solana MCP initialized successfully" };
+    }
