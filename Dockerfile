@@ -1,4 +1,4 @@
-FROM node:22-slim
+FROM node:23-alpine
 
 WORKDIR /app
 
@@ -6,8 +6,10 @@ WORKDIR /app
 COPY package*.json ./
 COPY tsconfig.json ./
 
+RUN curl -fsSL https://bun.sh/install | bash
+
 # Install dependencies
-RUN npm install
+RUN bun install
 
 # Copy source code
 COPY src ./src
