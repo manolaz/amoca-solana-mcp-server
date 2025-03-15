@@ -52,9 +52,9 @@ server.tool(
     { tokenId: z.string() },
     async ({ tokenId }) => {
         try {
-            const requestOptions = {
+            const requestOptions: RequestInit = {
                 method: "GET",
-                redirect: "follow"
+                redirect: "follow" as RequestRedirect
             };
 
             const response = await fetch(`https://public.jupiterapi.com/price?ids=${tokenId}`, requestOptions);
