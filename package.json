@@ -4,7 +4,7 @@
   "description": "",
   "main": "src/index.ts",
   "scripts": {
-    "build": "tsc && node -e \"require('fs').chmodSync('build/index.js', '755')\"",
+    "build": "tsc",
     "start": "ts-node src/index.ts",
     "generate-config": "echo '{\"mcpServers\":{\"solana-dev\":{\"command\":\"ts-node\",\"args\":[\"'$(pwd)'/src/index.ts\"]}}}'",
     "generate-config:js": "echo '{\"mcpServers\":{\"solana-dev\":{\"command\":\"node\",\"args\":[\"'$(pwd)'/dist/src/index.js\"]}}}'"
