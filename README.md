@@ -107,6 +107,27 @@ If you don't have `ts-node` installed globally:
 }
 ```
 
+## Using the Prompts
+
+This MCP server provides several pre-defined prompts to help with common Solana development tasks. Here's how to use them:
+
+### Account Balance Analysis
+
+You can analyze a Solana wallet's token balances using the 'account-balance' prompt:
+
+```
+@solana-dev I need to analyze the token portfolio for wallet address 9eGNc4BZCAgpiFT5vNGtJcZxwj18pbYWdLqWWJ2hcKYN
+```
+
+This will:
+- Fetch all token balances for the provided wallet
+- Calculate USD values for each token
+- Generate a distribution histogram of token values
+- Display the total portfolio value
+- List the top tokens by value
+
+You can use this prompt to quickly assess any wallet's holdings and get a comprehensive view of its portfolio composition.
+
 ## Project Structure
 
 - `index.ts` - Main server implementation
