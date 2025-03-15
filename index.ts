@@ -45,6 +45,37 @@ server.tool(
     }
 );
 
+// Get Token Price (Jupiter API)
+server.tool(
+    "getTokenPrice",
+    "Get current token price from Jupiter API",
+    { tokenId: z.string() },
+    async ({ tokenId }) => {
+        try {
+            const requestOptions = {
+                method: "GET",
+                redirect: "follow"
+            };
+
+            const response = await fetch(`https://public.jupiterapi.com/price?ids=${tokenId}`, requestOptions);
+            
+            if (!response.ok) {
+                throw new Error(`Failed to fetch price: ${response.status} ${response.statusText}`);
+            }
+            
+            const result = await response.json();
+            
+            return {
+                content: [{ type: "text", text: JSON.stringify(result, null, 2) }]
+            };
+        } catch (error) {
+            return {
+                content: [{ type: "text", text: `Error: ${(error as Error).message}` }]
+            };
+        }
+    }
+);
+
 // Get Balance
 server.tool(
     "getBalance",
