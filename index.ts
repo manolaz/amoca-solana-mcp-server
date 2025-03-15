@@ -1,13 +1,17 @@
 import { McpServer, ResourceTemplate } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import { ACTIONS, SolanaAgentKit , startMcpServer  } from "solana-agent-kit";
+import * as dotenv from "dotenv";
 import { z } from "zod";
 import { Connection, PublicKey, LAMPORTS_PER_SOL, clusterApiUrl } from "@solana/web3.js";
 import { getExplorerLink } from "gill";
 
-const link: string = getExplorerLink({
-  cluster: "devnet",
-  account: "AXxA7eN3e6Zj2NbGaJNk7YNhZSHjaJHhtXGKPCEV8Urn",
-});
+dotenv.config();
+
+// const link: string = getExplorerLink({
+//   cluster: "devnet",
+//   account: "AXxA7eN3e6Zj2NbGaJNk7YNhZSHjaJHhtXGKPCEV8Urn",
+// });
 
 // Create an MCP server
 const server = new McpServer({
@@ -17,6 +21,7 @@ const server = new McpServer({
 
 // Initialize Solana connection
 const connection = new Connection(clusterApiUrl("mainnet-beta"), "confirmed");
+// const connection = new Connection(clusterApiUrl("devnet"), "confirmed");
 
 // Solana RPC Methods as Tools
 
