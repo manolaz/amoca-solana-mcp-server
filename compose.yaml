@@ -1,0 +1,21 @@
+services:
+  amoca:
+    build:
+      context: ./
+    restart: unless-stopped
+    init: true
+    ports:
+      - "3000:3000"
+    depends_on:
+      - database
+    # env_file: ./.env  # Uncomment if .env file exists
+  database:
+    image: postgres:latest
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+    volumes:
+      - db_data:/var/lib/postgresql/data
+volumes:
+  db_data:
