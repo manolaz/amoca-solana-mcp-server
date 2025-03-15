@@ -3,15 +3,158 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { ACTIONS, SolanaAgentKit , startMcpServer  } from "solana-agent-kit";
 import * as dotenv from "dotenv";
 import { z } from "zod";
-import { Connection, PublicKey, LAMPORTS_PER_SOL, clusterApiUrl } from "@solana/web3.js";
+import { Connection, PublicKey, LAMPORTS_PER_SOL, clusterApiUrl, Keypair, Transaction } from "@solana/web3.js";
 import { getExplorerLink } from "gill";
+import { getOrCreateAssociatedTokenAccount } from "@solana/spl-token";
+import bs58 from "bs58";
 
 dotenv.config();
 
-// const link: string = getExplorerLink({
-//   cluster: "devnet",
-//   account: "AXxA7eN3e6Zj2NbGaJNk7YNhZSHjaJHhtXGKPCEV8Urn",
-// });
+// Jupiter API constants
+const JUPITER_QUOTE_API = 'https://quote-api.jup.ag/v6';
+
+// Type definitions for Solana Trading features
+interface SwapQuote {
+  inputMint: string;
+  outputMint: string;
+  amount: string;
+  slippage: number;
+}
+
+interface WalletDetails {
+  publicKey: string;
+  privateKey: string;
+}
+
+interface SwapResult {
+  txid: string;
+  status: 'confirmed' | 'failed';
+}
+
+// Renamed from SolanaTrader to AMOCASolanaAgent
+class AMOCASolanaAgent {
+  private connection: Connection;
+
+  constructor(connection: Connection) {
+    this.connection = connection;
+  }
+
+  createWallet(): WalletDetails {
+    const keypair = Keypair.generate();
+    return {
+      publicKey: keypair.publicKey.toString(),
+      privateKey: bs58.encode(keypair.secretKey),
+    };
+  }
+
+  importWallet(privateKey: string): WalletDetails {
+    try {
+      const keypair = Keypair.fromSecretKey(bs58.decode(privateKey));
+      return {
+        publicKey: keypair.publicKey.toString(),
+        privateKey,
+      };
+    } catch (error) {
+      throw new Error('Invalid private key');
+    }
+  }
+
+  async getTokenBalance(walletAddress: string, tokenMint: string): Promise<string> {
+    try {
+      const wallet = new PublicKey(walletAddress);
+      const mint = new PublicKey(tokenMint);
+      
+      const tokenAccount = await getOrCreateAssociatedTokenAccount(
+        this.connection,
+        Keypair.generate(), // dummy signer for read-only
+        mint,
+        wallet
+      );
+
+      const balance = await this.connection.getTokenAccountBalance(tokenAccount.address);
+      return balance.value.uiAmountString || '0';
+    } catch (error) {
+      console.error('Error getting token balance:', error);
+      throw error;
+    }
+  }
+
+  async getSwapQuote(params: SwapQuote): Promise<unknown> {
+    try {
+      const response = await fetch(
+        `${JUPITER_QUOTE_API}/quote?inputMint=${params.inputMint}&outputMint=${params.outputMint}&amount=${params.amount}&slippageBps=${params.slippage * 100}`,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error('Failed to get swap quote');
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Error getting swap quote:', error);
+      throw error;
+    }
+  }
+
+  async executeSwap(
+    quote: unknown,
+    walletPrivateKey: string
+  ): Promise<SwapResult> {
+    try {
+      // Get serialized transactions from Jupiter
+      const swapResponse = await fetch(`${JUPITER_QUOTE_API}/swap`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          quoteResponse: quote,
+          userPublicKey: Keypair.fromSecretKey(
+            bs58.decode(walletPrivateKey)
+          ).publicKey.toString(),
+        }),
+      });
+
+      if (!swapResponse.ok) {
+        throw new Error('Failed to prepare swap transaction');
+      }
+
+      const swapData = await swapResponse.json() as { swapTransaction: string };
+      const swapTransactionBuf = Buffer.from(swapData.swapTransaction, 'base64');
+      
+      // Deserialize and sign transaction
+      const transaction = Transaction.from(swapTransactionBuf);
+      const keypair = Keypair.fromSecretKey(bs58.decode(walletPrivateKey));
+      transaction.sign(keypair);
+
+      // Send transaction
+      const txid = await this.connection.sendRawTransaction(
+        transaction.serialize(),
+        { skipPreflight: true }
+      );
+
+      // Wait for confirmation
+      const confirmation = await this.connection.confirmTransaction(txid);
+      
+      if (confirmation.value.err) {
+        throw new Error('Transaction failed');
+      }
+
+      return {
+        txid,
+        status: 'confirmed',
+      };
+    } catch (error) {
+      console.error('Error executing swap:', error);
+      throw error;
+    }
+  }
+}
 
 // Create an MCP server
 const server = new McpServer({
@@ -22,6 +165,9 @@ const server = new McpServer({
 // Initialize Solana connection
 const connection = new Connection(clusterApiUrl("mainnet-beta"), "confirmed");
 // const connection = new Connection(clusterApiUrl("devnet"), "confirmed");
+
+// Initialize AMOCASolanaAgent with our connection (renamed from trader)
+const agent = new AMOCASolanaAgent(connection);
 
 // Solana RPC Methods as Tools
 
@@ -36,37 +182,6 @@ server.tool(
             const accountInfo = await connection.getAccountInfo(pubkey);
             return {
                 content: [{ type: "text", text: JSON.stringify(accountInfo, null, 2) }]
-            };
-        } catch (error) {
-            return {
-                content: [{ type: "text", text: `Error: ${(error as Error).message}` }]
-            };
-        }
-    }
-);
-
-// Get Token Price (Jupiter API)
-server.tool(
-    "getTokenPrice",
-    "Get current token price from Jupiter API",
-    { tokenId: z.string() },
-    async ({ tokenId }) => {
-        try {
-            const requestOptions: RequestInit = {
-                method: "GET",
-                redirect: "follow" as RequestRedirect
-            };
-
-            const response = await fetch(`https://public.jupiterapi.com/price?ids=${tokenId}`, requestOptions);
-            
-            if (!response.ok) {
-                throw new Error(`Failed to fetch price: ${response.status} ${response.statusText}`);
-            }
-            
-            const result = await response.json();
-            
-            return {
-                content: [{ type: "text", text: JSON.stringify(result, null, 2) }]
             };
         } catch (error) {
             return {
@@ -124,6 +239,119 @@ server.tool("getTransaction",
             const transaction = await connection.getParsedTransaction(signature, { maxSupportedTransactionVersion: 0 });
             return {
                 content: [{ type: "text", text: JSON.stringify(transaction, null, 2) }]
+            };
+        } catch (error) {
+            return {
+                content: [{ type: "text", text: `Error: ${(error as Error).message}` }]
+            };
+        }
+    }
+);
+
+// New trading tools
+
+// Create Wallet
+server.tool(
+    "createWallet",
+    "Create a new Solana wallet keypair",
+    {},
+    async () => {
+        try {
+            const wallet = agent.createWallet();
+            return {
+                content: [{ type: "text", text: JSON.stringify(wallet, null, 2) }]
+            };
+        } catch (error) {
+            return {
+                content: [{ type: "text", text: `Error: ${(error as Error).message}` }]
+            };
+        }
+    }
+);
+
+// Import Wallet
+server.tool(
+    "importWallet",
+    "Import an existing Solana wallet using private key",
+    { privateKey: z.string() },
+    async ({ privateKey }) => {
+        try {
+            const wallet = agent.importWallet(privateKey);
+            return {
+                content: [{ type: "text", text: JSON.stringify(wallet, null, 2) }]
+            };
+        } catch (error) {
+            return {
+                content: [{ type: "text", text: `Error: ${(error as Error).message}` }]
+            };
+        }
+    }
+);
+
+// Get Token Balance
+server.tool(
+    "getTokenBalance",
+    "Get token balance for a wallet",
+    { 
+        walletAddress: z.string(),
+        tokenMint: z.string()
+    },
+    async ({ walletAddress, tokenMint }) => {
+        try {
+            const balance = await agent.getTokenBalance(walletAddress, tokenMint);
+            return {
+                content: [{ type: "text", text: balance }]
+            };
+        } catch (error) {
+            return {
+                content: [{ type: "text", text: `Error: ${(error as Error).message}` }]
+            };
+        }
+    }
+);
+
+// Get Swap Quote
+server.tool(
+    "getSwapQuote",
+    "Get a quote for swapping tokens via Jupiter",
+    {
+        inputMint: z.string(),
+        outputMint: z.string(),
+        amount: z.string(),
+        slippage: z.number()
+    },
+    async ({ inputMint, outputMint, amount, slippage }) => {
+        try {
+            const quote = await agent.getSwapQuote({
+                inputMint,
+                outputMint,
+                amount,
+                slippage
+            });
+            return {
+                content: [{ type: "text", text: JSON.stringify(quote, null, 2) }]
+            };
+        } catch (error) {
+            return {
+                content: [{ type: "text", text: `Error: ${(error as Error).message}` }]
+            };
+        }
+    }
+);
+
+// Execute Swap
+server.tool(
+    "executeSwap",
+    "Execute a token swap using Jupiter",
+    {
+        quote: z.any(),
+        walletPrivateKey: z.string()
+    },
+    async ({ quote, walletPrivateKey }) => {
+        try {
+            const result = await agent.executeSwap(quote, walletPrivateKey);
+            return {
+                content: [{ type: "text", text: JSON.stringify(result, null, 2) }]
             };
         } catch (error) {
             return {
