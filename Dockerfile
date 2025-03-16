@@ -1,11 +1,12 @@
 FROM node:22.12-alpine AS builder
-
+RUN npm install -g @pnpm/exe@latest-10
+RUN npm install -g yarn
 COPY . /app
 COPY tsconfig.json /tsconfig.json
 
 WORKDIR /app
 
-RUN --mount=type=cache,target=/root/.npm npm install
+RUN yarn install
 
 RUN --mount=type=cache,target=/root/.npm-production npm ci --ignore-scripts --omit-dev
 
