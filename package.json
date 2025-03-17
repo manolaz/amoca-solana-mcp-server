@@ -14,15 +14,22 @@
   "license": "ISC",
   "packageManager": "pnpm@10.*",
   "dependencies": {
+    "@goat-sdk/adapter-model-context-protocol": "^0.2.10",
+    "@goat-sdk/core": "^0.4.9",
+    "@goat-sdk/plugin-erc20": "^0.2.14",
+    "@goat-sdk/plugin-spl-token": "^0.2.17",
+    "@goat-sdk/wallet-evm": "^0.2.11",
+    "@goat-sdk/wallet-solana": "^0.2.15",
+    "@modelcontextprotocol/sdk": "^1.7.0",
+    "bip39": "^3.1.0",
+    "bs58": "6.0.0",
+    "chalk": "^5.3.0",
+    "dotenv": "16.4.7",
     "gill": "^0.8.0",
     "helius-sdk": "^1.4.2",
     "solana-agent-kit": "^1.4.9",
-    "zod": "^3.24.2",
-    "bs58": "6.0.0",
-    "dotenv": "16.4.7",
-    "@modelcontextprotocol/sdk": "0.5.0",
-    "chalk": "^5.3.0",
-    "yargs": "^17.7.2"
+    "yargs": "^17.7.2",
+    "zod": "^3.24.2"
   },
   "devDependencies": {
     "@types/node": "^22.13.10",
