@@ -4,7 +4,11 @@
   "description": "",
   "main": "src/index.ts",
   "scripts": {
-    "build": "tsc",
+    "build": "rm -rf dist/ && tsc && shx chmod +x dist/*.js",
+    "prepare": "npm run build",
+    "debug": "npx @modelcontextprotocol/inspector node dist/index.js",
+    "watch": "tsc --watch",
+    "test": "vitest run",
     "start": "ts-node index.ts",
     "generate-config": "echo '{\"mcpServers\":{\"solana-dev\":{\"command\":\"ts-node\",\"args\":[\"'$(pwd)'/src/index.ts\"]}}}'",
     "generate-config:js": "echo '{\"mcpServers\":{\"solana-dev\":{\"command\":\"node\",\"args\":[\"'$(pwd)'/dist/src/index.js\"]}}}'"
@@ -12,7 +16,7 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "packageManager": "pnpm@latest-10",
+  "packageManager": "pnpm@10.6.3",
   "type": "module",
   "engines": {
     "node": ">=22.0.0"
@@ -38,9 +42,9 @@
   },
   "devDependencies": {
     "@types/node": "^22.13.10",
-    "ts-node": "^10.9.2",
-    "typescript": "^5.8.2",
     "@types/yargs": "^17.0.32",
-    "shx": "^0.3.4"
+    "shx": "^0.3.4",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.2"
   }
 }
