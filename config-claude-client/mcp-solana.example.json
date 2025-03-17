@@ -1,0 +1,12 @@
+{
+    "mcpServers": {
+        "amoca-solana": {
+            "command": "node",
+            "args": ["dist/index.js"],
+            "env": {
+                "WALLET_PRIVATE_KEY": "<YOUR_PRIVATE_KEY>",
+                "RPC_PROVIDER_URL": "<YOUR_RPC_PROVIDER_URL>"
+            }
+        }
+    }
+}
