@@ -13,6 +13,10 @@
   "author": "",
   "license": "ISC",
   "packageManager": "pnpm@latest-10",
+  "type": "module",
+  "engines": {
+    "node": ">=22.0.0"
+  },
   "dependencies": {
     "@goat-sdk/adapter-model-context-protocol": "^0.2.10",
     "@goat-sdk/core": "^0.4.9",
@@ -21,6 +25,7 @@
     "@goat-sdk/wallet-evm": "^0.2.11",
     "@goat-sdk/wallet-solana": "^0.2.15",
     "@modelcontextprotocol/sdk": "^1.7.0",
+    "@solana/spl-token": "^0.4.13",
     "bip39": "^3.1.0",
     "bs58": "6.0.0",
     "chalk": "^5.3.0",
