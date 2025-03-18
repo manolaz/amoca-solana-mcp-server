@@ -1164,6 +1164,45 @@ server.tool(
   }
 );
 
+// Get Compute Units
+server.tool(
+  "getComputeUnits",
+  "Simulate a transaction to get the total compute units consumed",
+  {
+    instructions: z.array(z.any()),
+    payerKey: z.string(),
+    lookupTables: z.array(z.any()).optional(),
+    signers: z.array(z.any()).optional()
+  },
+  async ({ instructions, payerKey, lookupTables, signers }) => {
+    try {
+      const response = await helius.rpc.getComputeUnits({
+        instructions,
+        payerKey,
+        lookupTables: lookupTables || [],
+        signers: signers || []
+      });
+      
+      if (response === null) {
+        return {
+          content: [{ type: "text", text: "Simulation failed: Unable to determine compute units" }]
+        };
+      }
+      
+      return {
+        content: [{ 
+          type: "text", 
+          text: `Simulation successful!\nCompute Units Consumed: ${response}` 
+        }]
+      };
+    } catch (error) {
+      return {
+        content: [{ type: "text", text: `Error: ${(error as Error).message}` }]
+      };
+    }
+  }
+);
+
 // Enhanced Prompts for New Helius Features
 
 server.prompt(
