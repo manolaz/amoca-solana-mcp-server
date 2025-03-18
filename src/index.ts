@@ -763,55 +763,36 @@ server.tool(
   }
 );
 
-// Get Transaction History
-server.tool(
-  "getTransactionHistory",
-  "Get transaction history for a specific asset or address",
-  {
-    account: z.string(),
-    page: z.number().optional(),
-    limit: z.number().optional()
-  },
-  async ({ account, page, limit }) => {
-    try {
-      const response = await helius.rpc.getTransactionHistory({
-        account,
-        options: {
-          limit: limit || 100,
-          page: page || 1
-        }
-      });
-      return {
-        content: [{ type: "text", text: JSON.stringify(response, null, 2) }]
-      };
-    } catch (error) {
-      return {
-        content: [{ type: "text", text: `Error: ${(error as Error).message}` }]
-      };
-    }
-  }
-);
+// Additional DAS API Tools
 
-// Get NFT Events
+// Search Assets
 server.tool(
-  "getNftEvents",
-  "Get NFT events like mints, sales, and listings",
+  "searchAssets",
+  "Search for assets using complex query parameters",
   {
     query: z.object({
-      types: z.array(z.string()).optional(),
-      sources: z.array(z.string()).optional(),
-      collectionId: z.string().optional(),
-      walletAddress: z.string().optional(),
+      ownerAddress: z.string().optional(),
+      creatorAddress: z.string().optional(),
+      collectionAddress: z.string().optional(),
+      grouping: z.array(z.object({
+        group_key: z.string(),
+        group_value: z.string()
+      })).optional(),
+      burnt: z.boolean().optional(),
+      compressible: z.boolean().optional(),
+      compressed: z.boolean().optional(),
+      tokenType: z.enum(["fungible", "nonFungible"]).optional()
     }).optional(),
     options: z.object({
       limit: z.number().optional(),
       page: z.number().optional(),
-      sortOrder: z.enum(["ASC", "DESC"]).optional(),
-    }).optional(),
+      sortBy: z.enum(["created", "updated"]).optional(),
+      sortDirection: z.enum(["asc", "desc"]).optional()
+    }).optional()
   },
   async ({ query, options }) => {
     try {
-      const response = await helius.rpc.getNftEvents({
+      const response = await helius.rpc.searchAssets({
         query: query || {},
         options: options || { limit: 100, page: 1 }
       });
@@ -826,139 +807,450 @@ server.tool(
   }
 );
 
-// Helius API Prompts
+// Get Asset Proof
+server.tool(
+  "getAssetProof",
+  "Get the merkle proof for a compressed NFT",
+  {
+    id: z.string()
+  },
+  async ({ id }) => {
+    try {
+      const response = await helius.rpc.getAssetProof({
+        id
+      });
+      return {
+        content: [{ type: "text", text: JSON.stringify(response, null, 2) }]
+      };
+    } catch (error) {
+      return {
+        content: [{ type: "text", text: `Error: ${(error as Error).message}` }]
+      };
+    }
+  }
+);
+
+// Get Assets By Creator
+server.tool(
+  "getAssetsByCreator",
+  "Get assets created by a specific creator address",
+  {
+    creatorAddress: z.string(),
+    page: z.number().optional(),
+    limit: z.number().optional()
+  },
+  async ({ creatorAddress, page, limit }) => {
+    try {
+      const response = await helius.rpc.getAssetsByCreator({
+        creatorAddress,
+        page: page || 1,
+        limit: limit || 100
+      });
+      return {
+        content: [{ type: "text", text: JSON.stringify(response, null, 2) }]
+      };
+    } catch (error) {
+      return {
+        content: [{ type: "text", text: `Error: ${(error as Error).message}` }]
+      };
+    }
+  }
+);
+
+// Get Assets By Authority
+server.tool(
+  "getAssetsByAuthority",
+  "Get assets by update authority address",
+  {
+    authorityAddress: z.string(),
+    page: z.number().optional(),
+    limit: z.number().optional()
+  },
+  async ({ authorityAddress, page, limit }) => {
+    try {
+      const response = await helius.rpc.getAssetsByAuthority({
+        authorityAddress,
+        page: page || 1,
+        limit: limit || 100
+      });
+      return {
+        content: [{ type: "text", text: JSON.stringify(response, null, 2) }]
+      };
+    } catch (error) {
+      return {
+        content: [{ type: "text", text: `Error: ${(error as Error).message}` }]
+      };
+    }
+  }
+);
+
+// Get NFT Editions
+server.tool(
+  "getNftEditions",
+  "Get all editions of a master edition NFT",
+  {
+    masterEditionAddress: z.string(),
+    page: z.number().optional(),
+    limit: z.number().optional()
+  },
+  async ({ masterEditionAddress, page, limit }) => {
+    try {
+      const response = await helius.rpc.getNftEditions({
+        masterEditionAddress,
+        page: page || 1,
+        limit: limit || 100
+      });
+      return {
+        content: [{ type: "text", text: JSON.stringify(response, null, 2) }]
+      };
+    } catch (error) {
+      return {
+        content: [{ type: "text", text: `Error: ${(error as Error).message}` }]
+      };
+    }
+  }
+);
+
+// Mint API Tools
+
+// Get Mintlist
+server.tool(
+  "getMintlist",
+  "Get mintlist for a collection",
+  {
+    collectionAddress: z.string(),
+    page: z.number().optional(),
+    limit: z.number().optional()
+  },
+  async ({ collectionAddress, page, limit }) => {
+    try {
+      const response = await helius.mint.getMintlist({
+        collectionAddress,
+        page: page || 1,
+        limit: limit || 100
+      });
+      return {
+        content: [{ type: "text", text: JSON.stringify(response, null, 2) }]
+      };
+    } catch (error) {
+      return {
+        content: [{ type: "text", text: `Error: ${(error as Error).message}` }]
+      };
+    }
+  }
+);
+
+// Webhook Management Tools
+
+// Get All Webhooks
+server.tool(
+  "getAllWebhooks",
+  "Get all webhooks for your Helius API key",
+  {},
+  async () => {
+    try {
+      const response = await helius.webhooks.getAllWebhooks();
+      return {
+        content: [{ type: "text", text: JSON.stringify(response, null, 2) }]
+      };
+    } catch (error) {
+      return {
+        content: [{ type: "text", text: `Error: ${(error as Error).message}` }]
+      };
+    }
+  }
+);
+
+// Get Webhook By ID
+server.tool(
+  "getWebhookByID",
+  "Get webhook details by webhook ID",
+  {
+    webhookID: z.string()
+  },
+  async ({ webhookID }) => {
+    try {
+      const response = await helius.webhooks.getWebhookByID({
+        webhookID
+      });
+      return {
+        content: [{ type: "text", text: JSON.stringify(response, null, 2) }]
+      };
+    } catch (error) {
+      return {
+        content: [{ type: "text", text: `Error: ${(error as Error).message}` }]
+      };
+    }
+  }
+);
+
+// Create Webhook
+server.tool(
+  "createWebhook",
+  "Create a new webhook for address activity monitoring",
+  {
+    webhook: z.object({
+      webhookURL: z.string(),
+      transactionTypes: z.array(z.string()),
+      accountAddresses: z.array(z.string()),
+      webhookType: z.string(),
+      authHeader: z.string().optional(),
+      txnStatus: z.enum(["all", "success", "fail"]).optional()
+    })
+  },
+  async ({ webhook }) => {
+    try {
+      const response = await helius.webhooks.createWebhook({
+        webhook
+      });
+      return {
+        content: [{ type: "text", text: JSON.stringify(response, null, 2) }]
+      };
+    } catch (error) {
+      return {
+        content: [{ type: "text", text: `Error: ${(error as Error).message}` }]
+      };
+    }
+  }
+);
+
+// Create Collection Webhook
+server.tool(
+  "createCollectionWebhook",
+  "Create a webhook to monitor NFT collections",
+  {
+    webhook: z.object({
+      webhookURL: z.string(),
+      transactionTypes: z.array(z.string()),
+      collectionQuery: z.object({
+        firstVerifiedCreators: z.array(z.string()).optional(),
+        verifiedCollectionAddresses: z.array(z.string()).optional()
+      }),
+      webhookType: z.string(),
+      authHeader: z.string().optional(),
+      txnStatus: z.enum(["all", "success", "fail"]).optional()
+    })
+  },
+  async ({ webhook }) => {
+    try {
+      const response = await helius.webhooks.createCollectionWebhook({
+        webhook
+      });
+      return {
+        content: [{ type: "text", text: JSON.stringify(response, null, 2) }]
+      };
+    } catch (error) {
+      return {
+        content: [{ type: "text", text: `Error: ${(error as Error).message}` }]
+      };
+    }
+  }
+);
+
+// Delete Webhook
+server.tool(
+  "deleteWebhook",
+  "Delete a webhook by its ID",
+  {
+    webhookID: z.string()
+  },
+  async ({ webhookID }) => {
+    try {
+      const response = await helius.webhooks.deleteWebhook({
+        webhookID
+      });
+      return {
+        content: [{ type: "text", text: JSON.stringify(response, null, 2) }]
+      };
+    } catch (error) {
+      return {
+        content: [{ type: "text", text: `Error: ${(error as Error).message}` }]
+      };
+    }
+  }
+);
+
+// Smart Transactions and Helper Tools
+
+// Get Current TPS
+server.tool(
+  "getCurrentTPS",
+  "Get current transactions per second on Solana",
+  {},
+  async () => {
+    try {
+      const response = await helius.utils.getCurrentTPS();
+      return {
+        content: [{ type: "text", text: JSON.stringify(response, null, 2) }]
+      };
+    } catch (error) {
+      return {
+        content: [{ type: "text", text: `Error: ${(error as Error).message}` }]
+      };
+    }
+  }
+);
+
+// Get Token Holders
+server.tool(
+  "getTokenHolders",
+  "Get holders of a specific token by mint address",
+  {
+    mintAddress: z.string(),
+    page: z.number().optional(),
+    limit: z.number().optional()
+  },
+  async ({ mintAddress, page, limit }) => {
+    try {
+      const response = await helius.utils.getTokenHolders({
+        mintAddress,
+        page: page || 1,
+        limit: limit || 100
+      });
+      return {
+        content: [{ type: "text", text: JSON.stringify(response, null, 2) }]
+      };
+    } catch (error) {
+      return {
+        content: [{ type: "text", text: `Error: ${(error as Error).message}` }]
+      };
+    }
+  }
+);
+
+// Get Priority Fee Estimate
+server.tool(
+  "getPriorityFeeEstimate",
+  "Get estimated priority fees for transactions",
+  {
+    accountKeys: z.array(z.string())
+  },
+  async ({ accountKeys }) => {
+    try {
+      const response = await helius.utils.getPriorityFeeEstimate({
+        accountKeys
+      });
+      return {
+        content: [{ type: "text", text: JSON.stringify(response, null, 2) }]
+      };
+    } catch (error) {
+      return {
+        content: [{ type: "text", text: `Error: ${(error as Error).message}` }]
+      };
+    }
+  }
+);
+
+// Get Stake Accounts
+server.tool(
+  "getStakeAccounts",
+  "Get stake accounts by their owner address",
+  {
+    ownerAddress: z.string()
+  },
+  async ({ ownerAddress }) => {
+    try {
+      const response = await helius.utils.getStakeAccounts({
+        ownerAddress
+      });
+      return {
+        content: [{ type: "text", text: JSON.stringify(response, null, 2) }]
+      };
+    } catch (error) {
+      return {
+        content: [{ type: "text", text: `Error: ${(error as Error).message}` }]
+      };
+    }
+  }
+);
+
+// Get Compute Units
+server.tool(
+  "getComputeUnits",
+  "Simulate a transaction to get the total compute units consumed",
+  {
+    instructions: z.array(z.any()),
+    payerKey: z.string(),
+    lookupTables: z.array(z.any()).optional(),
+    signers: z.array(z.any()).optional()
+  },
+  async ({ instructions, payerKey, lookupTables, signers }) => {
+    try {
+      const response = await helius.rpc.getComputeUnits({
+        instructions,
+        payerKey,
+        lookupTables: lookupTables || [],
+        signers: signers || []
+      });
+      
+      if (response === null) {
+        return {
+          content: [{ type: "text", text: "Simulation failed: Unable to determine compute units" }]
+        };
+      }
+      
+      return {
+        content: [{ 
+          type: "text", 
+          text: `Simulation successful!\nCompute Units Consumed: ${response}` 
+        }]
+      };
+    } catch (error) {
+      return {
+        content: [{ type: "text", text: `Error: ${(error as Error).message}` }]
+      };
+    }
+  }
+);
+
+// Enhanced Prompts for New Helius Features
 
 server.prompt(
-  'view-nft-collection',
-  'Get all NFTs from a collection using Helius API',
+  'collection-analysis',
+  'Get a detailed analysis of an NFT collection',
   { collectionAddress: z.string() },
   ({ collectionAddress }) => ({
     messages: [{
       role: 'user',
       content: {
         type: 'text',
-        text: `Get all NFTs from the collection with address ${collectionAddress} using the Helius API getAssetsByGroup endpoint with groupKey="collection" and groupValue being the collection address. Please summarize the collection and show some key stats like total count, floor price if available.`
+        text: `Analyze the NFT collection with address ${collectionAddress}. Use the Helius API getAssetsByGroup endpoint with groupKey="collection" and groupValue being the collection address. For deeper insight, also fetch mintlist information using getMintlist. Provide statistics about rarity distribution, holder distribution, and market activity if available.`
       }
     }]
   })
 );
 
 server.prompt(
-  'view-wallet-nfts',
-  'Get all NFTs owned by a wallet using Helius API',
-  { walletAddress: z.string() },
-  ({ walletAddress }) => ({
+  'monitor-nft-collection',
+  'Set up a webhook to monitor NFT collection activity',
+  { 
+    collectionAddress: z.string(),
+    webhookUrl: z.string().optional()
+  },
+  ({ collectionAddress, webhookUrl }) => ({
     messages: [{
       role: 'user',
       content: {
         type: 'text',
-        text: `Get all NFTs owned by the wallet ${walletAddress} using the Helius API getAssetsByOwner endpoint. Please summarize the NFTs by collection and provide a visual overview of the wallet's NFT portfolio.`
+        text: `Help me set up a webhook to monitor activity for the NFT collection with address ${collectionAddress}. ${webhookUrl ? `The webhook URL is ${webhookUrl}.` : 'Generate sample code that I can use to set up a webhook later.'} Include monitoring for mints, sales, listings, and transfers. Explain how I can process webhook events when they arrive.`
       }
     }]
   })
 );
 
 server.prompt(
-  'nft-transaction-history',
-  'Get transaction history for a specific NFT',
-  { assetId: z.string() },
-  ({ assetId }) => ({
+  'network-status',
+  'Get Solana network status information',
+  {},
+  () => ({
     messages: [{
       role: 'user',
       content: {
         type: 'text',
-        text: `Get the transaction history for the NFT with ID ${assetId} using the Helius API getTransactionHistory endpoint. Please analyze the history and provide insights on minting, transfers, sales, and listings if available.`
+        text: `Get the current Solana network status including TPS, average block time, and priority fee estimates. Analyze if this is a good time to send transactions or if the network is congested.`
       }
     }]
   })
-);
-
-server.prompt(
-    'calculate-storage-deposit',
-    'Calculate storage deposit for a specified number of bytes',
-    { bytes: z.string() },
-    ({ bytes }) => ({
-        messages: [{
-            role: 'user',
-            content: {
-                type: 'text',
-                text: `Calculate the SOL amount needed to store ${bytes} bytes of data on Solana using getMinimumBalanceForRentExemption.`
-            }
-        }]
-    })
-);
-
-server.prompt(
-    'minimum-amount-of-sol-for-storage',
-    'Calculate the minimum amount of SOL needed for storing 0 bytes on-chain',
-    () => ({
-        messages: [{
-            role: 'user',
-            content: {
-                type: 'text',
-                text: `Calculate the amount of SOL needed to store 0 bytes of data on Solana using getMinimumBalanceForRentExemption & present it to the user as the minimum cost for storing any data on Solana.`
-            }
-        }]
-    })
-);
-
-server.prompt(
-    'why-did-my-transaction-fail',
-    'Look up the given transaction and inspect its logs to figure out why it failed',
-    { signature: z.string() },
-    ({ signature }) => ({
-        messages: [{
-            role: 'user',
-            content: {
-                type: 'text',
-                text: `Look up the transaction with signature ${signature} and inspect its logs to figure out why it failed.`
-            }
-        }]
-    })
-);
-
-server.prompt(
-    'how-much-did-this-transaction-cost',
-    'Fetch the transaction by signature, and break down cost & priority fees',
-    { signature: z.string() },
-    ({ signature }) => ({
-        messages: [{
-            role: 'user',
-            content: {
-                type: 'text',
-                text: `Calculate the network fee for the transaction with signature ${signature} by fetching it and inspecting the 'fee' field in 'meta'. Base fee is 0.000005 sol per signature (also provided as array at the end). So priority fee is fee - (numSignatures * 0.000005). Please provide the base fee and the priority fee.`
-            }
-        }]
-    })
-);
-
-server.prompt('what-happened-in-transaction',
-    'Look up the given transaction and inspect its logs & instructions to figure out what happened',
-    { signature: z.string() },
-    ({ signature }) => ({
-        messages: [{
-            role: 'user',
-            content: {
-                type: 'text',
-                text: `Look up the transaction with signature ${signature} and inspect its logs & instructions to figure out what happened.`
-            }
-        }]
-    })
-);
-
-server.prompt(
-    'account-balance',
-    'Fetch and analyze all token balances for a Solana wallet address',
-    { walletAddress: z.string() },
-    ({ walletAddress }) => ({
-        messages: [{
-            role: 'user',
-            content: {
-                type: 'text',
-                text: `Get all token balances for the wallet address ${walletAddress}, analyze their USD values, and provide a summary of the wallet's portfolio including total value and distribution of assets.`
-            }
-        }]
-    })
 );
 
 // Start receiving messages on stdin and sending messages on stdout
