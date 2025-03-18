@@ -24,11 +24,11 @@ ENV NODE_ENV=production
 WORKDIR /app
 
 # Copy only necessary files from builder
-COPY --from=builder /app/dist /app/dist
+COPY --from=builder /app/build /app/build
 COPY --from=builder /app/package.json /app/package.json
 COPY --from=builder /app/pnpm-lock.yaml* /app/pnpm-lock.yaml*
 
 # Install production dependencies only
 RUN npm install -g pnpm@latest && pnpm install --prod
 
-ENTRYPOINT ["node", "dist/index.js"]
+ENTRYPOINT ["node", "build/index.js"]
