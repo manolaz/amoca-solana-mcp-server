@@ -7,8 +7,39 @@ import { Connection, PublicKey, LAMPORTS_PER_SOL, clusterApiUrl, Keypair, Transa
 import { getExplorerLink } from "gill";
 import { getOrCreateAssociatedTokenAccount } from "@solana/spl-token";
 import bs58 from "bs58";
+import { Helius } from "helius-sdk";
 
 dotenv.config();
+
+// Initialize Helius client with API key from environment variables
+const helius = new Helius(process.env.HELIUS_API_KEY || "");
+
+// Type definitions for Helius API responses
+interface HeliusAsset {
+  id: string;
+  content: {
+    metadata: any;
+    files?: any[];
+    json_uri?: string;
+    links?: any;
+  };
+  authorities: any[];
+  compression: any;
+  grouping: any[];
+  royalty: any;
+  creators: any[];
+  ownership: any;
+  supply: any;
+  mutable: boolean;
+  burnt: boolean;
+}
+
+interface HeliusAssetsByOwnerResponse {
+  items: HeliusAsset[];
+  total: number;
+  limit: number;
+  page: number;
+}
 
 // Jupiter API constants
 const JUPITER_QUOTE_API = 'https://quote-api.jup.ag/v6';
@@ -649,6 +680,197 @@ server.resource(
             };
         }
     }
+);
+
+// Helius API Tools
+
+// Get Assets By Owner
+server.tool(
+  "getAssetsByOwner",
+  "Get DAS API compliant NFTs owned by a specific address",
+  {
+    ownerAddress: z.string(),
+    page: z.number().optional(),
+    limit: z.number().optional()
+  },
+  async ({ ownerAddress, page, limit }) => {
+    try {
+      const response = await helius.rpc.getAssetsByOwner({
+        ownerAddress,
+        page: page || 1,
+        limit: limit || 100
+      });
+      return {
+        content: [{ type: "text", text: JSON.stringify(response, null, 2) }]
+      };
+    } catch (error) {
+      return {
+        content: [{ type: "text", text: `Error: ${(error as Error).message}` }]
+      };
+    }
+  }
+);
+
+// Get Asset
+server.tool(
+  "getAsset",
+  "Get detailed information about a specific asset by its ID",
+  {
+    id: z.string()
+  },
+  async ({ id }) => {
+    try {
+      const response = await helius.rpc.getAsset({
+        id
+      });
+      return {
+        content: [{ type: "text", text: JSON.stringify(response, null, 2) }]
+      };
+    } catch (error) {
+      return {
+        content: [{ type: "text", text: `Error: ${(error as Error).message}` }]
+      };
+    }
+  }
+);
+
+// Get Assets By Group
+server.tool(
+  "getAssetsByGroup",
+  "Get assets that belong to a specific group (like collection)",
+  {
+    groupKey: z.string(),
+    groupValue: z.string(),
+    page: z.number().optional(),
+    limit: z.number().optional()
+  },
+  async ({ groupKey, groupValue, page, limit }) => {
+    try {
+      const response = await helius.rpc.getAssetsByGroup({
+        groupKey,
+        groupValue,
+        page: page || 1,
+        limit: limit || 100
+      });
+      return {
+        content: [{ type: "text", text: JSON.stringify(response, null, 2) }]
+      };
+    } catch (error) {
+      return {
+        content: [{ type: "text", text: `Error: ${(error as Error).message}` }]
+      };
+    }
+  }
+);
+
+// Get Transaction History
+server.tool(
+  "getTransactionHistory",
+  "Get transaction history for a specific asset or address",
+  {
+    account: z.string(),
+    page: z.number().optional(),
+    limit: z.number().optional()
+  },
+  async ({ account, page, limit }) => {
+    try {
+      const response = await helius.rpc.getTransactionHistory({
+        account,
+        options: {
+          limit: limit || 100,
+          page: page || 1
+        }
+      });
+      return {
+        content: [{ type: "text", text: JSON.stringify(response, null, 2) }]
+      };
+    } catch (error) {
+      return {
+        content: [{ type: "text", text: `Error: ${(error as Error).message}` }]
+      };
+    }
+  }
+);
+
+// Get NFT Events
+server.tool(
+  "getNftEvents",
+  "Get NFT events like mints, sales, and listings",
+  {
+    query: z.object({
+      types: z.array(z.string()).optional(),
+      sources: z.array(z.string()).optional(),
+      collectionId: z.string().optional(),
+      walletAddress: z.string().optional(),
+    }).optional(),
+    options: z.object({
+      limit: z.number().optional(),
+      page: z.number().optional(),
+      sortOrder: z.enum(["ASC", "DESC"]).optional(),
+    }).optional(),
+  },
+  async ({ query, options }) => {
+    try {
+      const response = await helius.rpc.getNftEvents({
+        query: query || {},
+        options: options || { limit: 100, page: 1 }
+      });
+      return {
+        content: [{ type: "text", text: JSON.stringify(response, null, 2) }]
+      };
+    } catch (error) {
+      return {
+        content: [{ type: "text", text: `Error: ${(error as Error).message}` }]
+      };
+    }
+  }
+);
+
+// Helius API Prompts
+
+server.prompt(
+  'view-nft-collection',
+  'Get all NFTs from a collection using Helius API',
+  { collectionAddress: z.string() },
+  ({ collectionAddress }) => ({
+    messages: [{
+      role: 'user',
+      content: {
+        type: 'text',
+        text: `Get all NFTs from the collection with address ${collectionAddress} using the Helius API getAssetsByGroup endpoint with groupKey="collection" and groupValue being the collection address. Please summarize the collection and show some key stats like total count, floor price if available.`
+      }
+    }]
+  })
+);
+
+server.prompt(
+  'view-wallet-nfts',
+  'Get all NFTs owned by a wallet using Helius API',
+  { walletAddress: z.string() },
+  ({ walletAddress }) => ({
+    messages: [{
+      role: 'user',
+      content: {
+        type: 'text',
+        text: `Get all NFTs owned by the wallet ${walletAddress} using the Helius API getAssetsByOwner endpoint. Please summarize the NFTs by collection and provide a visual overview of the wallet's NFT portfolio.`
+      }
+    }]
+  })
+);
+
+server.prompt(
+  'nft-transaction-history',
+  'Get transaction history for a specific NFT',
+  { assetId: z.string() },
+  ({ assetId }) => ({
+    messages: [{
+      role: 'user',
+      content: {
+        type: 'text',
+        text: `Get the transaction history for the NFT with ID ${assetId} using the Helius API getTransactionHistory endpoint. Please analyze the history and provide insights on minting, transfers, sales, and listings if available.`
+      }
+    }]
+  })
 );
 
 server.prompt(
