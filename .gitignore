@@ -3,3 +3,4 @@ dist
 .env
 claude_desktop_config.json
 testApp/
+build/
