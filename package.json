@@ -6,7 +6,7 @@
   "scripts": {
     "build": "tsc",
     "prepare": "npm run build",
-    "debug": "npx @modelcontextprotocol/inspector node dist/index.js",
+    "debug": "npx @modelcontextprotocol/inspector node build/index.js",
     "watch": "tsc --watch",
     "test": "vitest run",
     "start": "ts-node src/index.ts",
