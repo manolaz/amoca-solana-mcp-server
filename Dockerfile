@@ -3,9 +3,14 @@ FROM node:22-alpine AS builder
 # Install pnpm only (removed redundant yarn)
 RUN npm install -g pnpm@latest
 
+# Must be entire project because `prepare` script is run during `npm install` and requires all files.
+COPY src/ /app
+COPY tsconfig.json /tsconfig.json
+
+COPY package.json pnpm-lock.yaml* ./
+
 # Copy package files first for better layer caching
 WORKDIR /app
-COPY package.json pnpm-lock.yaml* ./
 
 # Install dependencies
 RUN pnpm install
@@ -24,11 +29,11 @@ ENV NODE_ENV=production
 WORKDIR /app
 
 # Copy only necessary files from builder
-COPY --from=builder /app/build /app/build
+COPY --from=builder /app/dist /app/dist
 COPY --from=builder /app/package.json /app/package.json
 COPY --from=builder /app/pnpm-lock.yaml* /app/pnpm-lock.yaml*
 
-# Install production dependencies only
-RUN npm install -g pnpm@latest && pnpm install --prod
 
-ENTRYPOINT ["node", "build/index.js"]
+RUN npm ci --ignore-scripts --omit-dev
+
+ENTRYPOINT ["node", "dist/index.js"]
